@@ -12,19 +12,19 @@ for fashionName, _ in pairs(config) do
 end
 
 --- Cache prop entity for management, ex: remove when player disconnected
---- @param prop entity id of prop object
+--- @param netId network entity id of prop object
 --- @param isCache a boolean, true for caching, false for uncaching
 RegisterNetEvent('fashionsystem:cacheProp')
-AddEventHandler('fashionsystem:cacheProp', function(prop, isCache)
+AddEventHandler('fashionsystem:cacheProp', function(netId, isCache)
     local playerId = source
-    prop = NetworkGetEntityFromNetworkId(prop)
+
     if isCache then
         -- Allocate new memory for the table
         if fashionCache[playerId] == nil then fashionCache[playerId] = {} end
-        table.insert(fashionCache[playerId], prop)
+        table.insert(fashionCache[playerId], netId)
     else
-        table.remove(fashionCache[playerId], GetFashionIndex(playerId, prop))
         -- Free memory of the table
+        table.remove(fashionCache[playerId], GetFashionIndex(playerId, netId))
         if #fashionCache[playerId] == 0 then fashionCache[playerId] = nil end
     end
 end)
@@ -34,7 +34,9 @@ AddEventHandler('playerDropped', function()
     local playerId = source
     if fashionCache[playerId] ~= nil then
         for i = 1, #fashionCache[playerId] do
-            DeleteEntity(fashionCache[playerId][i])    
+            local entityId = NetworkGetEntityFromNetworkId(fashionCache[playerId][i])
+            -- while not DoesEntityExist(entityId) do Wait(0) end
+            DeleteEntity(entityId)
         end
     end
 end)

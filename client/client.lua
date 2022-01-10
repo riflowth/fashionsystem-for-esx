@@ -1,25 +1,37 @@
+ESX = nil
+TriggerEvent('esx:getSharedObject', function(instance) ESX = instance end)
+
 local usingFashion = {} -- Table of key-value pairs of fashio name and prop entity
 
 --- Register events for toggling fashion from the config
 for fashionName, data in pairs(config) do
     RegisterNetEvent('fashionsystem:toggle:' .. fashionName)
     AddEventHandler('fashionsystem:toggle:' .. fashionName, function()
+
+        local itemLabel = ''
+        for _, item in ipairs(ESX.GetPlayerData().inventory) do
+            if item.name == fashionName then
+                itemLabel = item.label
+                break
+            end
+        end
+
         if IsUsingFashion(fashionName) then
             local prop = usingFashion[fashionName]
 
-            -- Implement your code here
+            while not DoesEntityExist(prop) do Citizen.Wait(100) end
+
             exports.pNotify:SendNotification({
-                text = 'You has unequipped ' .. fashionName,
+                text = '<span class="red-text">คุณได้ถอด ' .. itemLabel .. '</span>',
                 type = 'success',
                 timeout = 2000,
                 layout = 'bottomCenter',
                 queue = 'FashionSystem'
             })
-            --------------------------
 
-            DeleteObject(prop)
-            TriggerServerEvent('fashionsystem:cacheProp', ObjToNet(prop), false)
             usingFashion[fashionName] = nil
+            TriggerServerEvent('fashionsystem:cacheProp', ObjToNet(prop), false)
+            DeleteObject(prop)
         else
             local playerPed = PlayerPedId()
             local coords = GetEntityCoords(playerPed)
@@ -28,16 +40,16 @@ for fashionName, data in pairs(config) do
 
             local fashionCoords = vector3(data.coords[1], data.coords[2], data.coords[3])
             local fashionRotation = vector3(data.rotation[1], data.rotation[2], data.rotation[3])
-            
-            -- Implement your code here
+
+            while not DoesEntityExist(prop) do Citizen.Wait(100) end
+
             exports.pNotify:SendNotification({
-                text = 'You has equipped ' .. fashionName,
+                text = '<span class="green-text">คุณได้ใส่ ' .. itemLabel .. '</span>',
                 type = 'success',
                 timeout = 2000,
                 layout = 'bottomCenter',
                 queue = 'FashionSystem'
             })
-            --------------------------
 
             usingFashion[fashionName] = prop
             TriggerServerEvent('fashionsystem:cacheProp', ObjToNet(prop), true)
